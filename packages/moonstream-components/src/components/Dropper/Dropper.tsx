@@ -8,12 +8,17 @@ import {
   Editable,
   EditablePreview,
   EditableInput,
+  Stack,
+  Select,
+  Button,
+  Spacer,
 } from "@chakra-ui/react";
 import Claim from "./Claim";
 import Web3Context from "../../core/providers/Web3Provider/context";
 import Paginator from "../Paginator";
 import { ClaimInterface } from "../../../../../types/Moonstream";
 import { useDropperContract, useDrops } from "../../core/hooks/dropper";
+import { useRouter } from "../../core/hooks";
 const Dropper = ({
   contractAddress,
   children,
@@ -24,7 +29,7 @@ const Dropper = ({
   props: any;
 }) => {
   const web3ctx = useContext(Web3Context);
-
+  const router = useRouter();
   const dropper = useDropperContract({
     dropperAddress: contractAddress,
     ctx: web3ctx,
@@ -34,15 +39,22 @@ const Dropper = ({
     dropperAddress: contractAddress,
     ctx: web3ctx,
   });
+  const { contractState } = useDropperContract({
+    dropperAddress: contractAddress,
+    ctx: web3ctx,
+  });
 
   if (!contractAddress)
     return <Text>{"Please specify terminus address "}</Text>;
   if (
     dropper.contractState.isLoading ||
     !dropper.contractState.data ||
-    dropperContracts.isLoading
+    dropperContracts.isLoading ||
+    contractState.isLoading
   )
     return <Spinner />;
+
+  console.log("contractState", contractState.data);
 
   return (
     <Flex
@@ -53,13 +65,13 @@ const Dropper = ({
       alignSelf={"center"}
       {...props}
     >
-      <Flex bgColor="blue.1000" p={[0, 0, 4, null]} direction="column">
+      <Flex mt={14} direction="column">
         <Heading>
           <Editable
             submitOnBlur={false}
-            bgColor={"blue.700"}
+            // bgColor={"blue.700"}
             size="sm"
-            fontSize={"sm"}
+            fontSize={"xl"}
             textColor="gray.500"
             w="100%"
             minW={["280px", "300px", "360px", "420px", null]}
@@ -88,8 +100,8 @@ const Dropper = ({
             </Skeleton>
           </Editable>
         </Heading>
-        <Flex direction={"column"} bgColor="blue.1000" flexWrap={"wrap"}>
-          <code key={"PoolController"}>
+        <Stack direction={"row"} flexWrap={"wrap"} spacing={8} mt={8}>
+          {/* <code key={"PoolController"}>
             Owner:
             <Editable
               submitOnBlur={false}
@@ -129,32 +141,80 @@ const Dropper = ({
                 <EditableInput w="100%" px={2} />
               </Skeleton>
             </Editable>
-          </code>
-          <code>
+          </code> */}
+          {/* <code>
             <Flex>
               {dropper.contractState.data?.paused ? "Paused" : "Running"}
             </Flex>
+          </code> */}
+          <code>
+            <b>Address:</b> {contractAddress}
           </code>
-          <code>Number of claims: {dropper.contractState.data?.numClaims}</code>
-        </Flex>
+          <code>
+            <b>NUMBER OF CLAIMS:</b> {dropper.contractState.data?.numClaims}
+          </code>
+        </Stack>
+      </Flex>
+      <Flex id="Drops Navbar" alignItems={"center"} justifyItems="flex-end">
+        <Spacer />
+        <Select
+          size="sm"
+          maxW="75px"
+          mr={2}
+          placeholder="Select page size"
+          onChange={(e) => {
+            router.appendQuery(`adminClaimsLimit`, e.target.value);
+          }}
+          value={router.query[`adminClaimsLimit`] ?? "25"}
+          bgColor="blue.900"
+          borderRadius={"md"}
+        >
+          {["25", "50", "100", "300", "500"].map((pageSize) => {
+            return (
+              <option
+                key={`paginator-options-pagesize-${pageSize}`}
+                value={pageSize}
+              >
+                {pageSize}
+              </option>
+            );
+          })}
+        </Select>{" "}
+        per page
+        <Button variant={"solid"} ml={24} colorScheme="orange" size="sm">
+          + Add new drop
+        </Button>
       </Flex>
 
       <Paginator
+        hideSelect={true}
         paginatorKey={"adminClaims"}
+        direction="row"
+        spacing="4px"
+        totalItems={contractState.data?.numClaims}
+        w="100%"
         setPage={pageOptions.setPage}
         setLimit={pageOptions.setPageSize}
         hasMore={adminClaims?.data?.length == pageOptions.pageSize}
+        mb={20}
       >
         {adminClaims.isLoading && <Spinner />}
         {web3ctx.account &&
           adminClaims?.data?.map((claim: ClaimInterface) => {
             return (
-              <Claim
-                dropperAddress={contractAddress}
-                key={`contract-card-${claim.id}}`}
-                claimId={claim.id}
-                claimIdx={claim.claim_id}
-              />
+              <>
+                <Claim
+                  isActive={claim.active}
+                  deadline={claim.claim_block_deadline.toString()}
+                  dropNumber={claim.claim_id.toString()}
+                  w="315px"
+                  m={"20px"}
+                  dropperAddress={contractAddress}
+                  key={`contract-card-${claim.id}}`}
+                  claimId={claim.id}
+                  claimIdx={claim.claim_id}
+                ></Claim>
+              </>
             );
           })}
       </Paginator>

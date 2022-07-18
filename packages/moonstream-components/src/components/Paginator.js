@@ -14,12 +14,16 @@ import { useRouter } from "../core/hooks";
 const _Paginator = ({
   children,
   setLimit,
+  direction,
+  hideSelect,
+  spacing,
   setPage,
   paginatorKey,
   hasMore,
   pageOptions,
   page,
   pageSize,
+  totalItems,
   ...props
 }) => {
   const router = useRouter();
@@ -87,7 +91,7 @@ const _Paginator = ({
         w="100%"
         alignItems="baseline"
       >
-        <Button
+        {/* <Button
           isDisabled={router.query[`${paginatorKey}Page`] == "0"}
           onClick={() => {
             setpageUpdate(true);
@@ -100,30 +104,32 @@ const _Paginator = ({
           }}
         >
           {`<<<`}
-        </Button>
+        </Button> */}
         <Spacer />
-        <Select
-          size="sm"
-          maxW="150px"
-          placeholder="Select page size"
-          onChange={(e) => {
-            router.appendQuery(`${paginatorKey}Limit`, e.target.value);
-          }}
-          value={router.query[`${paginatorKey}Limit`] ?? _pageOptions[0]}
-          bgColor="blue.500"
-        >
-          {_pageOptions.map((pageSize) => {
-            return (
-              <option
-                key={`paginator-options-pagesize-${pageSize}`}
-                value={pageSize}
-              >
-                {pageSize}
-              </option>
-            );
-          })}
-        </Select>
-        <Button
+        {!hideSelect && (
+          <Select
+            size="sm"
+            maxW="150px"
+            placeholder="Select page size"
+            onChange={(e) => {
+              router.appendQuery(`${paginatorKey}Limit`, e.target.value);
+            }}
+            value={router.query[`${paginatorKey}Limit`] ?? _pageOptions[0]}
+            bgColor="blue.500"
+          >
+            {_pageOptions.map((pageSize) => {
+              return (
+                <option
+                  key={`paginator-options-pagesize-${pageSize}`}
+                  value={pageSize}
+                >
+                  {pageSize}
+                </option>
+              );
+            })}
+          </Select>
+        )}
+        {/* <Button
           isDisabled={!hasMore}
           onClick={() => {
             setpageUpdate(true);
@@ -132,15 +138,52 @@ const _Paginator = ({
               Number(router.query[`${paginatorKey}Page`]) + 1
             );
           }}
-        >{`>>>`}</Button>
+        >{`>>>`}</Button> */}
       </ButtonGroup>
     </Flex>
   );
   return (
     <Flex className="Paginator" direction={"column"} w="100%" {...props}>
       <PageBar />
-      <ScaleFade in={!pageUpdate}>{children}</ScaleFade>
-      <PageBar />
+      <ScaleFade in={!pageUpdate}>
+        <Flex dir={direction} flexWrap="wrap">
+          {children}
+        </Flex>
+      </ScaleFade>
+      <ButtonGroup
+        size="sm"
+        variant={"outline"}
+        colorScheme="orange"
+        justifyContent={"space-between"}
+        w="100%"
+        alignItems="baseline"
+      >
+        {/* <Button
+          isDisabled={router.query[`${paginatorKey}Page`] == "0"}
+          onClick={() => {
+            setpageUpdate(true);
+            router.appendQuery(
+              `${paginatorKey}Page`,
+              Number(router.query[`${paginatorKey}Page`]) - 1 <= 0
+                ? 0
+                : Number(router.query[`${paginatorKey}Page`]) - 1
+            );
+          }}
+        >
+          {`<<<`}
+        </Button> */}
+        <Spacer />
+        {/* <Button
+          isDisabled={!hasMore}
+          onClick={() => {
+            setpageUpdate(true);
+            router.appendQuery(
+              `${paginatorKey}Page`,
+              Number(router.query[`${paginatorKey}Page`]) + 1
+            );
+          }}
+        >{`>>>`}</Button> */}
+      </ButtonGroup>
     </Flex>
   );
 };
